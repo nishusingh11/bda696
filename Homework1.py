@@ -8,6 +8,7 @@ from sklearn.preprocessing import StandardScaler
 from sklearn.tree import DecisionTreeClassifier
 
 
+# Loading Iris dataset into dataframe using panda
 def load(file_name):
     data = pandas.read_csv(file_name)
     data.columns = [
@@ -23,13 +24,16 @@ def load(file_name):
     return data
 
 
+# Printing statistics summary using describe method.
 def statistic_summary(data):
     # Summary Statistics
     print("\n", round(data.describe()), 3)
 
 
+# Plotting 3D-Scatter, Violin, Scatter matrix,
+# Histogram, Box plot using plotly
 def plot_data(data):
-
+    # 1. 3D-Scatter
     plot_3d_scatter = px.scatter_3d(
         data,
         x="sepal_length",
@@ -41,13 +45,13 @@ def plot_data(data):
 
     plot_3d_scatter.show()
 
-    # 2. plotting data using violin
+    # 2. violin
     plot_violin = px.violin(
-        data, x="petal_length", y="class", color="class", box=True, title="Violin plot"
+        data, x="class", y="petal_length", color="class", box=True, title="Violin plot"
     )
     plot_violin.show()
 
-    # 3. plotting data using 2-D scatter
+    # 3. scatter matrix
     plot_scatter_matrix = px.scatter_matrix(
         data,
         dimensions=["sepal_width", "sepal_length", "petal_width", "petal_length"],
@@ -55,17 +59,18 @@ def plot_data(data):
     )
     plot_scatter_matrix.show()
 
-    # 4. plotting data using histogram
+    # 4.histogram
     plot_histogram = px.histogram(
-        data, x="petal_length", y="petal_width", color="class", title="histogram"
+        data, x="petal_length", color="class", title="histogram"
     )
     plot_histogram.show()
 
-    # 5. Plotting data using empirical cumulative distribution
+    # 5. Box plot
     plot_box = px.box(data, color="class", title="Box Plot")
     plot_box.show()
 
 
+# Analyse and Build model using StandardScaler() and RandomForestClassifier()
 def random_forest(data):
     # Selecting features and target for Random Forest
     X = data.iloc[:, [0, 1, 2, 3]]
@@ -93,6 +98,7 @@ def random_forest(data):
     )
 
 
+# Analyse and Build model using StandardScaler() and DecisionTreeClassifier()
 def decision_tree(data):
     # Selecting Features and target for Decision Tree
     X = data.iloc[:, [0, 1, 2, 3]]
