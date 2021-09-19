@@ -88,9 +88,6 @@ def random_forest(data):
     prediction = pipeline.predict(X_test)
     print("\n Random Forest Model Prediction\n")
     print(f"prediction:{prediction}")
-    # print(confusion_matrix(Y_test, prediction))
-    # print(classification_report(Y_test, prediction))
-    # Printing accuracy of Random Forest Classifier
     print(
         "Random Forest Accuracy\t{}".format(
             round(accuracy_score(Y_test, prediction), 5)
@@ -123,7 +120,7 @@ def decision_tree(data):
 
 
 def main():
-    data = load("/home/nishu/ws/bda696-ws/bda696/iris.data")
+    data = load("iris.data")
     statistic_summary(data)
     plot_data(data)
     random_forest(data)
