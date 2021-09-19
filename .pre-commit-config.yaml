@@ -9,9 +9,10 @@ repos:
     hooks:
       - id: seed-isort-config
   - repo: https://github.com/timothycrosley/isort
-    rev: 4.3.21
+    rev: 5.5.4
     hooks:
       - id: isort
+        args: ["--profile", "black"]
   - repo: https://github.com/Lucas-C/pre-commit-hooks-safety
     rev: v1.1.0
     hooks:
@@ -20,8 +21,8 @@ repos:
     rev: 3.7.9
     hooks:
       - id: flake8
-  - repo: https://github.com/prettier/prettier
-    rev: "2.0.5" # Use the sha or tag you want to point at
+  - repo: https://github.com/prettier/pre-commit
+    rev: main
     hooks:
       - id: prettier
   - repo: git@github.com:Yelp/detect-secrets
