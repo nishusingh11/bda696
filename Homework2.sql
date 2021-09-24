@@ -31,9 +31,9 @@ DROP TABLE IF EXISTS batter_avg_annual;
 
 CREATE TABLE batter_avg_annual AS 
 	SELECT batter AS Batter, 
-		   YEAR(game.local_date) AS For_Year, (CASE WHEN SUM(bc.atBat) > 0 
+		   YEAR(game.local_date) AS For_Year, (CASE WHEN SUM(bc.atBat) > 0
 													THEN SUM(bc.Hit)/ SUM(bc.atBat)
-													ELSE 0 
+													ELSE 0
 														END) AS Batting_Avg
 			FROM batter_counts AS bc,game
 			WHERE bc.game_id = game.game_id
