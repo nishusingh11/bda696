@@ -7,25 +7,28 @@
 USE baseball;
 
 -- **************** Historical Batting Average **********************************
--- Calculation of batting average for every batter
+-- Calculation of batting average for every player
+-- 4073 rows are created for batter_avg_historical table.
 -- ******************************************************************************
 
 DROP TABLE IF EXISTS batter_avg_historical;
 
-CREATE TABLE batter_avg_historical AS 
-	SELECT batter AS Batter, 
-			SUM(Hit) AS Hit, 
-			SUM(atBat) AS atBat,(CASE WHEN SUM(atBat) > 0 
-									  THEN  SUM(Hit)/SUM(atBat) 
+CREATE TABLE batter_avg_historical AS
+	SELECT batter AS Batter,
+			SUM(Hit) AS Hit,
+			SUM(atBat) AS atBat,(CASE WHEN SUM(atBat) > 0
+									  THEN  SUM(Hit)/SUM(atBat)
 									   ELSE 0
 										  END) AS Batting_Avg
 			FROM batter_counts
 			GROUP BY Batter;
 
 SELECT * FROM batter_avg_historical;
+SELECT count(*) FROM batter_avg_historical;
 
 -- ***************************************************************************
--- Calculation of batting average for every batter annually
+-- Calculation of batting average for every player annually
+-- 10641 rows are created for batter_avg_annual.
 -- **************** Annual Batting Average ***********************************
 DROP TABLE IF EXISTS batter_avg_annual;
 
@@ -41,9 +44,11 @@ CREATE TABLE batter_avg_annual AS
 			ORDER BY Batter, For_Year;
 
 SELECT * FROM batter_avg_annual;
+SELECT count(*) FROM batter_avg_annual;
 -- ****************************************************************************
--- Calculation of batting average for rooling over last 100 days,
+-- Calculation of batting average for rolling over last 100 days,
 -- created temporary table for storing intermediate results
+-- 380 rows crested for batter=407832
 -- **************** Rolling Batting Average ***********************************
 
 CREATE OR REPLACE TEMPORARY TABLE batter_avg_rolling_temp AS
@@ -69,13 +74,14 @@ CREATE OR REPLACE TABLE batter_avg_rolling AS
 			ON bart1.Batter = bart2.Batter
 			AND bart2.local_date < bart1.local_date
 			AND bart2.local_date > DATE_SUB(bart1.local_date, interval 100 DAY)
-			# Remove this Where clause for all batters
+			# Remove this Where clause for all players
 			WHERE bart1.batter = 407832
 			GROUP BY bart1.Batter , bart1.local_date
-			ORDER BY bart1.game_id ;
+			ORDER BY bart1.Batter ;
 
 
 
 SELECT * from batter_avg_rolling;
+SELECT count(*) FROM batter_avg_rolling;
 
  	
