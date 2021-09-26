@@ -48,7 +48,6 @@ SELECT count(*) FROM batter_avg_annual;
 -- ****************************************************************************
 -- Calculation of batting average for rolling over last 100 days,
 -- created temporary table for storing intermediate results
--- 380 rows crested for batter=407832
 -- **************** Rolling Batting Average ***********************************
 
 CREATE OR REPLACE TEMPORARY TABLE batter_avg_rolling_temp AS
@@ -58,6 +57,7 @@ CREATE OR REPLACE TEMPORARY TABLE batter_avg_rolling_temp AS
  			 game.local_date
 			 FROM batter_counts AS bc,game
 			 WHERE bc.game_id = game.game_id;
+CREATE INDEX Batter_id ON batter_avg_rolling_temp(Batter);
 SELECT * FROM batter_avg_rolling_temp bart;
 
 
@@ -75,9 +75,9 @@ CREATE OR REPLACE TABLE batter_avg_rolling AS
 			AND bart2.local_date < bart1.local_date
 			AND bart2.local_date > DATE_SUB(bart1.local_date, interval 100 DAY)
 			# Remove this Where clause for all players
-			WHERE bart1.batter = 407832
+			#WHERE bart1.batter = 407832
 			GROUP BY bart1.Batter , bart1.local_date
-			ORDER BY bart1.Batter ;
+			ORDER BY bart1.Batter;
 
 
 
