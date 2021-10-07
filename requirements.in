@@ -2,6 +2,8 @@ numpy
 pandas
 pip-tools
 plotly
+pyspark
+pyspark-stubs
 scikit-learn
 sqlalchemy
 mariadb
