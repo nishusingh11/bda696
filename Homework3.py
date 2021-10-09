@@ -2,7 +2,6 @@ import sys
 
 from pyspark import SparkConf, SparkContext, StorageLevel
 from pyspark.sql import SparkSession
-
 from batting_avg_transform import BattingAverageTransform
 
 
@@ -85,18 +84,21 @@ def main():
                 bart1.batter, bart1.game_id, bart1.local_date
                 """
     )
+
     rolling_lookup_df.createOrReplaceTempView("batter_avg_temp")
     rolling_lookup_df.persist(StorageLevel.MEMORY_AND_DISK)
 
-    # Custom transformation for calculation of rolling average.
+    # Using transformation for calculation of rolling average.
     batting_avg_transform = BattingAverageTransform(
         inputCols=["Total_Hit", "Total_atBat"], outputCol="Batting_Average"
     )
     rolling_average = batting_avg_transform.transform(rolling_sum)
     print("+----------------Batting Average for Rolling over 100 Days---------------+")
-    # Final Results
-    rolling_average.show(n=100, truncate=False)
 
+    # Printing final Rolling average table
+    #rolling_average.show(n=100, truncate=False)
+    #rolling_average.write.csv('output')
+    rolling_average.show()
 
 if __name__ == "__main__":
     sys.exit(main())
