@@ -1,7 +1,11 @@
+flask
 numpy
 pandas
 pip-tools
 plotly
+pyspark
+pyspark-stubs
 scikit-learn
 sqlalchemy
+statsmodels
 mariadb

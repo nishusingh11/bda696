@@ -38,7 +38,7 @@ jsonschema==3.2.0         # via jupyterlab-server, nbformat
 jupyter-client==6.1.7     # via ipykernel, notebook
 jupyter-core==4.6.3       # via jupyter-client, nbconvert, nbformat, notebook
 jupyterlab-server==1.2.0  # via jupyterlab
-jupyterlab==3.1.0         # via -r requirements.dev.in
+jupyterlab==3.1.4         # via -r requirements.dev.in
 markupsafe==1.1.1         # via jinja2
 mccabe==0.6.1             # via flake8
 mistune==0.8.4            # via nbconvert
