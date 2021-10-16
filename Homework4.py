@@ -13,6 +13,8 @@ from sklearn.ensemble import RandomForestClassifier, RandomForestRegressor
 from sklearn.metrics import confusion_matrix
 
 # Global variables for creating html file
+tvalue = {}
+pvalue = {}
 plot = {}
 model_plot = {}
 weight_table = {}
@@ -190,6 +192,8 @@ def unweighted_table(feature, column, Y):
         feature_bin_list = []
         response_bin_list = []
         for i in range(len(feature)):
+
+            # Below condition is to include high value in last bin
             if n == 9:
                 if low <= feature[i] <= high:
                     feature_bin_list.append(feature[i])
@@ -213,7 +217,7 @@ def unweighted_table(feature, column, Y):
             bin_count = int(len(feature_bin_list))
             bin_mean = statistics.mean(response_bin_list)
             pop_mean = numpy.nanmean(y)
-            mean_sq_diff = abs((bin_mean - pop_mean) ** 2)
+            mean_sq_diff = round(abs((bin_mean - pop_mean) ** 2), 5)
             new_table = {
                 "LowerBin": low,
                 "UpperBin": high,
@@ -240,7 +244,6 @@ def weighted_table(Unweighted_Table, feature):
 
 
 def plot_weighted(Weighted_Table, feature, column):
-    # population_mean = Weighted_Table["PopulationMean"][1]
     x = [i for i in Weighted_Table["BinCenter"]]
     y = [i for i in Weighted_Table["BinCount"]]
     print(column)
@@ -288,18 +291,19 @@ def variable_importance(X, Y, response_type, predictors):
 
 
 def main():
-    tvalue = {}
-    pvalue = {}
+
     if not os.path.exists("plot"):
         os.makedirs("plot")
 
-    dataset = datasets.load_breast_cancer()
+    dataset = datasets.load_diabetes()
     dataset_df = pd.DataFrame(data=dataset.data, columns=dataset.feature_names)
     dataset_df["target"] = dataset.target
-    print(dataset_df)
+    # print(dataset_df)
 
     # Identify predictors and response
     print(f"columns: {dataset_df.columns.to_list()}")
+
+    # For Sklearn dataset, enter response as "target"
     response = input("Enter response column")
 
     # Predictors list containing all features
@@ -307,8 +311,6 @@ def main():
 
     # X will print the data of all predictors and Y will print data of response
     X = dataset_df[predictors]
-    # X=dataset.data
-
     Y = dataset_df[response]
 
     # Identify predictor and response type
@@ -318,14 +320,10 @@ def main():
     response_type = check_for_response(Y)
     for predictor in predictors:
         predictors_type.append(check_for_predictor(dataset_df[predictor]))
-    print(predictors_type)
 
     # Checking for each predictors_type and response_type
     for index, column in enumerate(predictors):
-        # column = column.replace(" ", "")
-        # print(predictor)
         feature = dataset_df[column]
-        print(feature)
         predictor = statsmodels.api.add_constant(feature)
 
         # Plotting graphs for each condition
@@ -353,6 +351,7 @@ def main():
                 yaxis_title=response,
             )
 
+            # writing plot on html file
             file_name = f"plot/model_plot_{column}.html"
             fig.write_html(file=file_name, include_plotlyjs="cdn")
             model_plot[column] = file_name
@@ -378,7 +377,6 @@ def main():
 
         # Generating Unweighted Table
         Unweighted_Table = unweighted_table(feature, column, Y)
-        # unweight_table[column] = Unweighted_Table
         html_unweight = Unweighted_Table.to_html()
         file_name = f"plot/unweight_table_{column}.html"
         file = open(file_name, "w")
@@ -389,50 +387,37 @@ def main():
             Unweighted_Table["MeanSquareDiff"].sum() / 10
         )
 
-        print(
-            f"\n unweighted mean square diff of {column}",
-            Unweighted_Table["MeanSquareDiff"].sum() / 10,
-        )
-
         # Generating Weighted Table
         Weighted_Table = weighted_table(Unweighted_Table, feature)
-        # weight_table[column] = Weighted_Table
         html_weight = Weighted_Table.to_html()
         file_name = f"plot/weight_table_{column}.html"
         file = open(file_name, "w")
         file.write(html_weight)
         file.close()
         weight_table[column] = file_name
-        # print('\nweighted', Weighted_Table)
-        print(
-            f"\nweighted square diff of {column}",
-            Weighted_Table["MeanSquaredDiffWeighted"].sum() / 10,
-        )
         MeanSquareDiff_weighted[column] = (
             Weighted_Table["MeanSquaredDiffWeighted"].sum() / 10
         )
 
-        # ploting weigted graph
+        # plotting weighted graph
         plot_weighted(Weighted_Table, feature, column)
 
     # Random Forest variable Importance ranking
     variable_importance(X, Y, response_type, predictors)
 
-    # print("this is mean",MeanSquareDiff)
-    # print('tvalues are :\n',tvalue)
-    # print('model:',model_plot)
-    # print('plots\n',plot)
-    # print("unweighted table", unweight_table)
-    # print("weighted table",weight_table)
-
+    # Code for HTML page
     data = []
+    sorted_importance = dict(
+        sorted(var_importance.items(), key=lambda x: x[1], reverse=True)
+    )
+    print(sorted_importance)
 
-    for index, column in enumerate(X):
+    for column, value in sorted_importance.items():
         data.append(
             dict(
                 response="response",
                 predictor=column,
-                Importance=var_importance[column],
+                Importance=sorted_importance[column],
                 plots="http://localhost:5000/" + plot[column],
                 model_plots="http://localhost:5000/" + model_plot[column],
                 unweight="http://localhost:5000/" + unweight_table[column],
