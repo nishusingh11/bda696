@@ -295,7 +295,7 @@ def main():
     if not os.path.exists("plot"):
         os.makedirs("plot")
 
-    dataset = datasets.load_diabetes()
+    dataset = datasets.load_wine()
     dataset_df = pd.DataFrame(data=dataset.data, columns=dataset.feature_names)
     dataset_df["target"] = dataset.target
     # print(dataset_df)
@@ -443,4 +443,4 @@ def flask_server():
 
 if __name__ == "__main__":
     main()
-    flask_server()
+    # flask_server()
