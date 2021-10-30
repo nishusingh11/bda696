@@ -12,7 +12,6 @@ from plotly import express as px
 from plotly import figure_factory as ff
 from plotly import graph_objs as go
 
-plot = {}
 correlation_table = {}
 correlation_matrices = []
 correlation_plot = []
@@ -54,7 +53,6 @@ def bool_response_cat_predictor(feature, column, Y, response, df):
         file=file_name_cat_con,
         include_plotlyjs="cdn",
     )
-    plot[column] = file_name
 
 
 # Function for plotting distribution plot
@@ -68,23 +66,6 @@ def bool_response_con_predictor(dataset_df, response, column, Y):
     fig.update_layout(
         title="Continuous Predictor by Boolean Response",
     )
-    fig.show()
-    file_name = f"plot/hw_4_plot/cr_con_{column}.html"
-    file_name_cat_con = f"plot/hw_4_plot/cr_cat_con_{column}.html"
-    fig.write_html(
-        file=file_name,
-        include_plotlyjs="cdn",
-    )
-    fig.write_html(
-        file=file_name_cat_con,
-        include_plotlyjs="cdn",
-    )
-
-    """
-    fig = px.histogram(
-        dataset_df, x=column, histnorm="probability", barmode="overlay", marginal="rug",
-        title="Continuous Predictor by Bool Response",
-    )
     # fig.show()
     file_name = f"plot/hw_4_plot/cr_con_{column}.html"
     file_name_cat_con = f"plot/hw_4_plot/cr_cat_con_{column}.html"
@@ -96,8 +77,6 @@ def bool_response_con_predictor(dataset_df, response, column, Y):
         file=file_name_cat_con,
         include_plotlyjs="cdn",
     )
-    """
-    plot[column] = file_name
 
 
 # Function for plotting Violin plot
@@ -133,7 +112,6 @@ def con_response_cat_predictor(dataset_df, column, Y, response):
         file=file_name_cat_con,
         include_plotlyjs="cdn",
     )
-    plot[column] = file_name
 
 
 # Function for plotting scatter plot
@@ -153,7 +131,6 @@ def con_response_con_predictor(feature, column, y, response):
         file=file_name_cat_con,
         include_plotlyjs="cdn",
     )
-    plot[column] = file_name
 
 
 def linear_regression(y, pred, column):
@@ -195,22 +172,22 @@ def plot1(df, title):
             showscale=True,
             hoverongaps=True,
         )
-        # add title
+
         fig.update_layout(title_text=f"<i><b>{title}</b></i>")
         fig.show()
         return fig
 
 
 def main():
-    if not os.path.exists("plot/bf"):
-        os.makedirs("plot/bf")
+    if not os.path.exists("plot/brute_force"):
+        os.makedirs("plot/brute_force")
     if not os.path.exists("plot/correlation_plot"):
         os.makedirs("plot/correlation_plot")
     if not os.path.exists("plot/hw_4_plot"):
         os.makedirs("plot/hw_4_plot")
     path = os.path.abspath("plot/hw_4_plot")
 
-    # Enter the Dataframe for datasets: "mpg", "tips", "titanic",
+    # Enter the name of datasets: "mpg", "tips", "titanic",
     # "boston", "diabetes", "breast_cancer", "Churn"
     df, predictor, response = data.get_test_data_set("Churn")
 
@@ -240,11 +217,8 @@ def main():
         else:
             df_cat_predictor[column] = X[column]
             cat_names.append(column)
-
-    # print(df_cat_predictor.head(50))
-    # print("cat_names", cat_names)
-    # print(df_con_predictor)
-    # print("con_names", con_names)
+    print("categorical predictors are:\n", cat_names)
+    print("continuous predictors are:\n", con_names)
 
     for index, column in enumerate(X):
         feature = X[column]
@@ -294,12 +268,8 @@ def main():
 
     correlation_matrices.append(con_con_matrix)
 
-    con_con_table = table.correlation_table1(con_con_matrix, response)
+    con_con_table = table.correlation_table(con_con_matrix, response)
     print("\ncon-con correlation table\n", con_con_table)
-
-    # con-con matrix plot
-    # con_mat = matrix_plot(con_con_table, "continuous continuous matrix plot")
-    # con_mat.show()
 
     # saving con-con matrix in html file
     location = f"plot/correlation_plot/con_con_heatmap.html"
@@ -330,7 +300,7 @@ def main():
     print("\ncat_con_matrix\n", cat_con_matrix)
     correlation_matrices.append(cat_con_matrix)
 
-    cat_con_table = table.correlation_table2(cat_con_matrix, response)
+    cat_con_table = table.correlation_table(cat_con_matrix, response)
     print("\ncat-con correlation table\n", cat_con_table)
 
     # Heatmap plot for cat-con matrix
@@ -345,22 +315,25 @@ def main():
     correlation_plot.append(location)
 
     # cat con msd table
-    cat_con_msd_df = msd.cat_con_diff(X, y, con_names, cat_names, response)
+    cat_con_msd_df = msd.cat_con_diff(
+        X, y, con_names, cat_names, response, response_type
+    )
     print("result cat con msd\n", cat_con_msd_df)
 
     # -----------correlation score, matrix and msd table for cat-cat----------------
+
     cat_cat_matrix = {}
     for i in cat_names:
         cat_cat_matrix[i] = {}
         for j in cat_names:
             cat_cat_matrix[i][j] = round(
-                correlation_score.cat_correlation(X[i], X[j]), 5
+                correlation_score.cat_correlation(df[i], df[j]), 5
             )
 
     # print(cat_cat_matrix)
     correlation_matrices.append(cat_cat_matrix)
 
-    cat_cat_table = table.correlation_table3(cat_cat_matrix, response)
+    cat_cat_table = table.correlation_table(cat_cat_matrix, response)
     print("\ncat-cat correlation table\n", cat_cat_table)
 
     cat_cat_matrix_df = pd.DataFrame(cat_cat_matrix)
@@ -376,7 +349,7 @@ def main():
     correlation_plot.append(location)
 
     # cat cat msd table
-    cat_cat_msd_df = msd.cat_cat_diff(X, y, cat_names, response)
+    cat_cat_msd_df = msd.cat_cat_diff(X, y, cat_names, response, response_type)
     print("\nresult cat cat msd\n", cat_cat_msd_df)
 
     # ------------------------- Printing All matrices-----------------------------
@@ -385,11 +358,13 @@ def main():
 
     # Html pages for correlation table with linked plots and msd table with plots
     # correlation table stored in plot/hw_4_plot with name of ""cr.html
-    # msd table stored in plot/bf with name bf "bf.html"
+    # msd table stored in plot/ with name brute_force "brute_force.html"
     dataframes = [cat_cat_table, cat_con_table, con_con_table]
     link.generate_html_cr(dataframes, path)
-    dataframes_bf = [cat_cat_msd_df, cat_con_msd_df, con_con_msd_df]
-    link.generate_html_bf(dataframes_bf, os.path.abspath("plot/bf"))
+    dataframes_brute_force = [cat_cat_msd_df, cat_con_msd_df, con_con_msd_df]
+    link.generate_html_brute_force(
+        dataframes_brute_force, os.path.abspath("plot/brute_force")
+    )
 
 
 if __name__ == "__main__":

@@ -1,5 +1,6 @@
-import pandas as pd
-
+"""
+Html code
+"""
 table_categories = ["Category", "Category And Continuous", "Continuous"]
 category_ids = ["cat", "cat_con", "con"]
 
@@ -67,7 +68,7 @@ def __get_row_for_cr(data_row, category, index):
     return row_str
 
 
-def __get_row_for_bf(data_row, category, index):
+def __get_row_for_brute_force(data_row, category, index):
     # data_row = data_row[0]
     # print("hjsjhsgyuqk\n",data_row)
     response = data_row[0]
@@ -93,7 +94,7 @@ def __get_row_for_bf(data_row, category, index):
         + "</b> weighted_msd: <b>"
         + weighted_msd
     )
-    plot_file_name = "bf_" + plot + ".html"
+    plot_file_name = "brute_force_" + plot + ".html"
     row_str = (
         """
                     <tr>
@@ -156,10 +157,8 @@ def __get_initial_html_str():
     <script src="https://ajax.googleapis.com/ajax/libs/jquery/2.1.1/jquery.min.js">
     </script> <link
     href="https://stackpath.bootstrapcdn.com/bootstrap/4.1.1/css/bootstrap.min.css" rel="stylesheet"
-    integrity="sha384-WskhaSGFgHYWDcbwN70/dfYBj47jz9qbsMId/iRN3ewGhXQFZCSftd1LZCfmhktB"
     crossorigin="anonymous"> <script
     src="https://stackpath.bootstrapcdn.com/bootstrap/4.1.1/js/bootstrap.min.js"
-    integrity="sha384-smHYKdLADwkXOn1EmN1qk/HfnUcbVRZyYmZ4qpPea6sjB/pTJ0euyQp0Mk8ck+5T"
     crossorigin="anonymous"></script>
     <table>
 
@@ -245,7 +244,7 @@ def __generate_table_cr(dataframe, table_label, table_id):
     return table_str
 
 
-def __generate_table_bf(dataframe, table_label, table_id):
+def __generate_table_brute_force(dataframe, table_label, table_id):
     anchor_str = __get_anchor_str(table_id, table_label)
     table_str = (
         anchor_str
@@ -271,7 +270,7 @@ def __generate_table_bf(dataframe, table_label, table_id):
     for index, row in dataframe.iterrows():
         # print("complete dataframe\n",dataframe)
         # print("row\n",row)
-        row_str = __get_row_for_bf(row, table_id, str(i))
+        row_str = __get_row_for_brute_force(row, table_id, str(i))
         i = i + 1
         table_str = table_str + row_str
 
@@ -299,13 +298,12 @@ def generate_html_cr(dataframes, path):
     hs.write(html_str)
 
 
-def generate_html_bf(dataframes, path):
+def generate_html_brute_force(dataframes, path):
     html_str = __get_initial_html_str()
     for i in range(0, len(table_categories)):
-        html_str = html_str + __generate_table_bf(
+        html_str = html_str + __generate_table_brute_force(
             dataframes[i], table_categories[i], category_ids[i]
         )
     html_str = html_str + __get_last_html_str()
-    hs = open(path + "/bf.html", "w")
+    hs = open(path + "/brute_force.html", "w")
     hs.write(html_str)
-

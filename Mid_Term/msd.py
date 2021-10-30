@@ -1,11 +1,14 @@
+"""
+Code: To create mean square difference table weighted in descending order.
+"""
+
 import pandas as pd
 from plotly import graph_objs as go
 
 
 def con_con_diff(X, y, con_names, response, response_type):
-    # print("predictors\n", X)
-    # print("con names are\n", con_names)
-    con2_diff_plot = {}
+
+    con_diff_plot = {}
     cols = [
         "response",
         "predictor1",
@@ -18,10 +21,8 @@ def con_con_diff(X, y, con_names, response, response_type):
         pop_mean = y.mean()
     else:
         pop_mean = y.astype("category").cat.codes.mean()
-    # pop_mean = round(y.sum() / len(y), 5)
-    # print("pp" ,pop_mean)
     for p1 in con_names:
-        con2_diff_plot[p1] = {}
+        con_diff_plot[p1] = {}
         for p2 in con_names:
             if p1 is not p2:
                 b1 = pd.DataFrame(
@@ -29,18 +30,16 @@ def con_con_diff(X, y, con_names, response, response_type):
                         "x1": X[p1],
                         "x2": X[p2],
                         "y": y,
-                        "bucket1": pd.cut(X[p1].rank(method="first"), 10),
-                        "bucket2": pd.cut(X[p2].rank(method="first"), 10),
+                        "B1": pd.cut(X[p1].rank(method="first"), 10),
+                        "B2": pd.cut(X[p2].rank(method="first"), 10),
                     }
                 )
                 b2 = (
-                    b1.groupby(["bucket1", "bucket2"])
-                    .agg({"y": ["count", "mean"]})
-                    .reset_index()
+                    b1.groupby(["B1", "B2"]).agg({"y": ["count", "mean"]}).reset_index()
                 )
                 b2.columns = [p1, p2, "bin_count", "bin_mean"]
                 pp = b2.bin_count / len(y)
-                b2["unweighted_msd"] = b2["bin_mean"] - pop_mean ** 2
+                b2["unweighted_msd"] = ((b2["bin_mean"] - pop_mean) ** 2) / 10
                 b2["weighted_msd"] = b2.unweighted_msd * pp
                 con_con_msd_df = con_con_msd_df.append(
                     dict(
@@ -61,34 +60,28 @@ def con_con_diff(X, y, con_names, response, response_type):
                     by="weighted_msd",
                     ascending=False,
                 )
-                con_con_msd_df["weighted_msd"].round(5)
-                d_mat = b2.pivot(index=p1, columns=p2, values="weighted_msd")
 
-                fig = go.Figure(data=[go.Surface(z=d_mat.values)])
-                fig.update_layout(
-                    title=p1 + " " + p2 + "with bin difference weighted",
+                d = b2.pivot(index=p1, columns=p2, values="weighted_msd")
+
+                graph = go.Figure(data=[go.Surface(z=d.values)])
+                graph.update_layout(
+                    title=f"{p1} vs {p2} plot",
                     autosize=True,
                     scene=dict(xaxis_title=p2, yaxis_title=p1, zaxis_title="z"),
                 )
-                fig1 = go.Figure(data=go.Heatmap(z=d_mat.values, hoverongaps=False))
-                fig1.update_xaxes(title_text=p1, showticklabels=False)
-                fig1.update_yaxes(title=p2, showticklabels=False)
-                fig1.update_layout(title=f"{p1}_{p2} weighted msd heatmap")
-                # fig.show()
-                # fig1.show()
 
-                filename = f"plot/bf/bf_con_{p1}_{p2}.html"
-                fig.write_html(
+                filename = f"plot/brute_force/brute_force_con_{p1}_{p2}.html"
+                graph.write_html(
                     file=filename,
                     include_plotlyjs="cdn",
                 )
-                con2_diff_plot[p1][p2] = filename
+                con_diff_plot[p1][p2] = filename
 
     # print(con2_diff_plot)
-    return con_con_msd_df, con2_diff_plot
+    return con_con_msd_df, con_diff_plot
 
 
-def cat_con_diff(X, y, con_names, cat_names, response):
+def cat_con_diff(X, y, con_names, cat_names, response, response_type):
     cols = [
         "response",
         "predictor1",
@@ -97,7 +90,10 @@ def cat_con_diff(X, y, con_names, cat_names, response):
         "weighted_msd",
     ]
     cat_con_msd_df = pd.DataFrame(columns=cols)
-    pop_mean = round(y.sum() / len(y), 5)
+    if response_type == "continuous":
+        pop_mean = y.mean()
+    else:
+        pop_mean = y.astype("category").cat.codes.mean()
     for p1 in cat_names:
         for p2 in con_names:
             if p1 is not p2:
@@ -106,17 +102,13 @@ def cat_con_diff(X, y, con_names, cat_names, response):
                         "x1": X[p1],
                         "x2": X[p2],
                         "y": y,
-                        "bucket": pd.cut(X[p2].rank(method="first"), 10),
+                        "B": pd.cut(X[p2].rank(method="first"), 10),
                     }
                 )
-                b2 = (
-                    b1.groupby(["x1", "bucket"])
-                    .agg({"y": ["count", "mean"]})
-                    .reset_index()
-                )
+                b2 = b1.groupby(["x1", "B"]).agg({"y": ["count", "mean"]}).reset_index()
                 b2.columns = [p1, p2, "bin_count", "bin_mean"]
                 pp = b2.bin_count / len(y)
-                b2["unweighted_msd"] = (b2["bin_mean"] - pop_mean) ** 2
+                b2["unweighted_msd"] = ((b2["bin_mean"] - pop_mean) ** 2) / 10
                 b2["weighted_msd"] = b2.unweighted_msd * pp
                 cat_con_msd_df = cat_con_msd_df.append(
                     dict(
@@ -137,24 +129,24 @@ def cat_con_diff(X, y, con_names, cat_names, response):
                     by="weighted_msd", ascending=False
                 )
 
-                d_mat = b2.pivot(index=p1, columns=p2, values="weighted_msd")
-                fig = go.Figure(data=[go.Surface(z=d_mat.values)])
-                fig.update_layout(
-                    title=p1 + " " + p2 + " Plot",
+                d = b2.pivot(index=p1, columns=p2, values="weighted_msd")
+                graph = go.Figure(data=[go.Surface(z=d.values)])
+                graph.update_layout(
+                    title=f"{p1}vs {p2} Plot",
                     autosize=True,
-                    scene=dict(xaxis_title=p2, yaxis_title=p1, zaxis_title="target"),
+                    scene=dict(xaxis_title=p2, yaxis_title=p1, zaxis_title="z"),
                 )
 
-                filename = "plot/bf/bf_cat_con_" + p1 + "_" + p2 + ".html"
-                fig.write_html(
-                    file=filename,
+                file = "plot/brute_force/brute_force_cat_con_" + p1 + "_" + p2 + ".html"
+                graph.write_html(
+                    file=file,
                     include_plotlyjs="cdn",
                 )
 
     return cat_con_msd_df
 
 
-def cat_cat_diff(X, y, cat_names, response):
+def cat_cat_diff(X, y, cat_names, response, response_type):
     cols = [
         "response",
         "predictor1",
@@ -163,7 +155,10 @@ def cat_cat_diff(X, y, cat_names, response):
         "weighted_msd",
     ]
     cat_cat_msd_df = pd.DataFrame(columns=cols)
-    pop_mean = round(y.sum() / len(y), 5)
+    if response_type == "continuous":
+        pop_mean = y.mean()
+    else:
+        pop_mean = y.astype("category").cat.codes.mean()
     for p1 in cat_names:
         for p2 in cat_names:
             if p1 is not p2:
@@ -179,7 +174,7 @@ def cat_cat_diff(X, y, cat_names, response):
                 )
                 b2.columns = [p1, p2, "bin_count", "bin_mean"]
                 pp = b2.bin_count / len(y)
-                b2["unweighted_msd"] = (b2["bin_mean"] - pop_mean) ** 2
+                b2["unweighted_msd"] = ((b2["bin_mean"] - pop_mean) ** 2) / 10
                 b2["weighted_msd"] = b2.unweighted_msd * pp
                 cat_cat_msd_df = cat_cat_msd_df.append(
                     dict(
@@ -200,18 +195,17 @@ def cat_cat_diff(X, y, cat_names, response):
                     by="weighted_msd", ascending=False
                 )
                 cat_cat_msd_df["weighted_msd"].round(5)
-                d_mat = b2.pivot(index=p1, columns=p2, values="weighted_msd")
-                # print("catcat\n", cat_cat_msd_df)
-                fig = go.Figure(data=[go.Surface(z=d_mat.values)])
-                fig.update_layout(
-                    title=p1 + " " + p2 + " Plot",
+                d = b2.pivot(index=p1, columns=p2, values="weighted_msd")
+                graph = go.Figure(data=[go.Surface(z=d.values)])
+                graph.update_layout(
+                    title=f"{p1} vs{p2} plot",
                     autosize=True,
-                    scene=dict(xaxis_title=p2, yaxis_title=p1, zaxis_title="target"),
+                    scene=dict(xaxis_title=p2, yaxis_title=p1, zaxis_title="z"),
                 )
 
-                filename = "plot/bf/bf_cat_" + p1 + "_" + p2 + ".html"
-                fig.write_html(
-                    file=filename,
+                file = f"plot/brute_force/brute_force_cat_{p1}_{p2}.html"
+                graph.write_html(
+                    file=file,
                     include_plotlyjs="cdn",
                 )
 

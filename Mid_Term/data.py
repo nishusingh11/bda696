@@ -1,3 +1,6 @@
+"""
+Data file given by professor
+"""
 import random
 from typing import List
 
@@ -85,12 +88,7 @@ def get_test_data_set(data_set_name: str = None) -> (pandas.DataFrame, List[str]
     elif data_set_name == "Churn":
         data_set = pandas.read_csv("Mid_Term/Churn.csv")
         response = "Churn"
-        # predictor = data_set.drop(['Churn'], axis=1)
-        # df = pd.read_csv('Mid_Term/Churn.csv')
         data_set.dropna()
-        # print(data.columns)
-        # print(data.isna().any())
-        # y = data_set["Churn"]
         X = data_set.drop(["Churn", "customerID"], axis=1)
         data_set["TotalCharges"] = data_set["TotalCharges"].replace(" ", 0)
 
@@ -101,25 +99,5 @@ def get_test_data_set(data_set_name: str = None) -> (pandas.DataFrame, List[str]
     return data_set, predictors, response
 
 
-# def Churn():
-#
-#     data = pandas.read_csv(os.path.abspath('MidTerm/Churn.csv'))
-#     response="Churn"
-#     predictor=data.drop(['Churn'], axis = 1)
-#     #df = pd.read_csv('Mid_Term/Churn.csv')
-#     data.dropna()
-#     # print(data.columns)
-#     # print(data.isna().any())
-#     y = data["Churn"]
-#     X = data.drop(['Churn', 'customerID'], axis=1)
-#     predictor = X.columns.values
-#     print(data)
-#     print(predictor)
-#     print(response)
-#
-#     return data, predictor, response
-
-
 if __name__ == "__main__":
     df, predictors, response = get_test_data_set()
-    # data, predictor, response = Churn()
