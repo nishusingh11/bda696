@@ -1,7 +1,14 @@
+association-metrics
+dython
+flask
 numpy
 pandas
 pip-tools
 plotly
+pyspark
+pyspark-stubs
+seaborn
 scikit-learn
 sqlalchemy
+statsmodels
 mariadb
