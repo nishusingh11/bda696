@@ -55,6 +55,7 @@ numpy==1.18.4
     #   scipy
     #   seaborn
     #   statsmodels
+    #   xgboost
 pandas==1.1.5
     # via
     #   -r requirements.in
@@ -101,6 +102,7 @@ scipy==1.5.4
     #   scikit-plot
     #   seaborn
     #   statsmodels
+    #   xgboost
 seaborn==0.11.2
     # via
     #   -r requirements.in
@@ -126,6 +128,8 @@ werkzeug==2.0.2
     # via flask
 wheel==0.37.0
     # via pip-tools
+xgboost==1.5.0
+    # via -r requirements.in
 zipp==3.5.0
     # via
     #   importlib-metadata

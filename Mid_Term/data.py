@@ -86,7 +86,7 @@ def get_test_data_set(data_set_name: str = None) -> (pandas.DataFrame, List[str]
         response = "target"
 
     elif data_set_name == "Churn":
-        data_set = pandas.read_csv("Mid_Term/Churn.csv")
+        data_set = pandas.read_csv("./Churn.csv")
         response = "Churn"
         data_set.dropna()
         X = data_set.drop(["Churn", "customerID"], axis=1)
