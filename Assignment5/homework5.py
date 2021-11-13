@@ -1,27 +1,26 @@
-import sys
 import os
-from pyspark import SparkConf, SparkContext, StorageLevel
-from pyspark.sql import SparkSession
-import pandas as pd
+
 import correlation_score
 import link
 import msd
-import table
 import numpy
+import pandas as pd
 import statsmodels.api
+import table
 from plotly import express as px
 from plotly import figure_factory as ff
 from plotly import graph_objs as go
-from sklearn.model_selection import train_test_split
+from pyspark import SparkConf, SparkContext, StorageLevel
+from pyspark.sql import SparkSession
+from sklearn import svm
+from sklearn.discriminant_analysis import LinearDiscriminantAnalysis as LDA
 from sklearn.ensemble import RandomForestClassifier
 from sklearn.linear_model import LogisticRegression
-from sklearn.discriminant_analysis import LinearDiscriminantAnalysis as LDA
-from sklearn import svm
-from xgboost import XGBClassifier
-from sklearn.pipeline import Pipeline
-from sklearn.preprocessing import Normalizer, LabelEncoder, OneHotEncoder, StandardScaler
-from sklearn.compose import ColumnTransformer
 from sklearn.metrics import accuracy_score, classification_report, confusion_matrix
+from sklearn.model_selection import train_test_split
+from sklearn.pipeline import Pipeline
+from sklearn.preprocessing import Normalizer
+from sklearn.linear_model import LogisticRegression
 
 correlation_table = {}
 correlation_matrices = []
@@ -38,9 +37,7 @@ def check_for_response(col):
 
 # Function checking for boolean or continuous Predictor
 def check_for_predictor(column):
-    if column.dtypes in ["object"] or (
-            column.nunique() / column.count() < 0.05
-    ):
+    if column.dtypes in ["object"] or (column.nunique() / column.count() < 0.05):
         return "categorical"
     else:
         return "continuous"
@@ -69,10 +66,8 @@ def bool_response_cat_predictor(feature, column, Y, response, df):
 # Function for plotting distribution plot
 def bool_response_con_predictor(dataset_df, response, column, Y):
     dataset_df = dataset_df.astype(float)
-    dtype = dataset_df.dtypes
     # df['a'] = df['a'].astype(float, errors='raise')
-    hist_data = [dataset_df[Y == 0][column],
-                 dataset_df[Y == 1][column]]
+    hist_data = [dataset_df[Y == 0][column], dataset_df[Y == 1][column]]
     group_labels = ["Response=0", "Response=1"]
 
     # group_labels = ["0", "1"]
@@ -81,7 +76,7 @@ def bool_response_con_predictor(dataset_df, response, column, Y):
     # hist_data = [label_0, label_1]
     print(hist_data)
     colors = ["slategray", "magenta"]
-    fig = ff.create_distplot(hist_data, group_labels, bin_size=10)
+    fig = ff.create_distplot(hist_data, group_labels, bin_size=10, colors=colors)
     fig.update_layout(
         title="Continuous Predictor by Boolean Response",
     )
@@ -166,7 +161,9 @@ def linear_regression(y, pred, column):
 
 
 def logistic_regression(y, pred, column):
-    logistic_regression_model = statsmodels.api.Logit(y.astype(float), pred.astype(float))
+    logistic_regression_model = statsmodels.api.Logit(
+        y.astype(float), pred.astype(float)
+    )
     logistic_regression_model_fitted = logistic_regression_model.fit()
     print(f"Feature_Name:{column}")
     print(logistic_regression_model_fitted.summary())
@@ -210,33 +207,34 @@ def main():
     SparkContext(conf=conf)
     spark = (
         SparkSession.builder.master("local[*]")
-            .config("spark.sql.debug.maxToStringFields", 128)
-            .getOrCreate()
+        .config("spark.sql.debug.maxToStringFields", 128)
+        .getOrCreate()
     )
 
     # Dataframe for final_baseball_features
     dataframe = (
-        spark.read.format("jdbc").options(
-            url="jdbc:mysql://localhost:3306/newbaseball",
+        spark.read.format("jdbc")
+        .options(
+            url="jdbc:mysql://localhost:3306/baseball",
             driver="org.mariadb.jdbc.Driver",
-            dbtable="features_per",
+            dbtable="feature_ratio",
             user="root",
-            password="abc123",
-        ).load()
+            password="abc123",  # pragma: allowlist secret
+        )
+        .load()
     )
 
-    dataframe.createOrReplaceTempView("features_per")
+    dataframe.createOrReplaceTempView("feature_ratio")
     dataframe.persist(StorageLevel.MEMORY_AND_DISK)
     query = spark.sql(
-        """ SELECT * FROM features_per
-           
+        """ SELECT * FROM feature_ratio
         """
     )
     query.show()
     df = dataframe.toPandas()
     df = df.drop(["home_team_id", "away_team_id", "game_id"], axis=1)
-    dtype = df.dtypes
-
+    for column in df:
+        df[column].fillna(0, inplace=True)
     df = df.round(3)
     print(df.dtypes)
     df.dropna(axis=1)
@@ -299,7 +297,7 @@ def main():
                 xaxis_title=f"Variable:{column}",
                 yaxis_title=response,
             )
-            # fig.show()
+            fig.show()
         elif response_type == "boolean" and predictor_type[index] == "continuous":
             t_val, p_val = logistic_regression(y, pred, column)
             fig = px.scatter(x=feature, y=y, trendline="ols")
@@ -308,7 +306,7 @@ def main():
                 xaxis_title=f"Variable: {column}",
                 yaxis_title=response,
             )
-            # fig.show()
+            fig.show()
 
     # -----------correlation score, matrix and msd table for con-con----------------
 
@@ -368,12 +366,12 @@ def main():
     # cat_con_mat.show()
 
     # saving cat-con matrix in html file
-    if type(cat_con_matrix_d) == type(None):
-        location = f"plot/correlation_plot/cat_con_heatmap.html"
-        cat_con_plot.write_html(file=location, include_plotlyjs="cdn")
-        correlation_plot.append(location)
+    # if type(cat_con_matrix_d) == type(None):
+    location = f"plot/correlation_plot/cat_con_heatmap.html"
+    cat_con_plot.write_html(file=location, include_plotlyjs="cdn")
+    correlation_plot.append(location)
 
-        # cat con msd table
+    # cat con msd table
     cat_con_msd_df = msd.cat_con_diff(
         X, y, con_names, cat_names, response, response_type
     )
@@ -404,12 +402,12 @@ def main():
     )
 
     # saving cat-cat matrix in html file
-    if type(cat_cat_matrix_df) == type(None):
-        location = f"plot/correlation_plot/cat_cat_heatmap.html"
-        cat_cat_mat.write_html(file=location, default_width="40%", include_plotlyjs="cdn")
-        correlation_plot.append(location)
+    # if type(cat_cat_matrix_df) == type(None):
+    location = f"plot/correlation_plot/cat_cat_heatmap.html"
+    cat_cat_mat.write_html(file=location, default_width="40%", include_plotlyjs="cdn")
+    correlation_plot.append(location)
 
-        # cat cat msd table
+    # cat cat msd table
     cat_cat_msd_df = msd.cat_cat_diff(X, y, cat_names, response, response_type)
     print("\nresult cat cat msd\n", cat_cat_msd_df)
 
@@ -429,7 +427,9 @@ def main():
 
     # Modelling
 
-    X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.15, random_state=1234)
+    X_train, X_test, y_train, y_test = train_test_split(
+        X, y, test_size=0.15, random_state=1234
+    )
 
     pipe = Pipeline([("Normalize", Normalizer()), ("LDA", LDA(n_components=1))])
     pipe.fit(X_train, y_train)
@@ -438,20 +438,43 @@ def main():
     accuracy_LDA = accuracy_score(y_test, y_predict)
     print("confusion matrix of LDA:", confusion_mat)
     print("accuracy of LDA", accuracy_LDA)
+    print("Classification Report of LDA\n", classification_report(y_test, y_predict))
 
     # Random Forest Classifier
-    random_classifier = RandomForestClassifier(n_estimators=100, max_depth=15, criterion='entropy', random_state=499)
+    random_classifier = Pipeline(
+        [
+            ("Normalize", Normalizer()),
+            (
+                "RFC",
+                RandomForestClassifier(
+                    n_estimators=100,
+                    max_depth=15,
+                    criterion="entropy",
+                    random_state=499,
+                ),
+            ),
+        ]
+    )
     random_classifier.fit(X_train, y_train)
     y_predict = random_classifier.predict(X_test)
     accuracy_RFC = accuracy_score(y_test, y_predict)
     print("Accuracy of RFC", accuracy_RFC)
+    print(
+        "Classification Report of Random Forest Classifier\n",
+        classification_report(y_test, y_predict),
+    )
 
     # Logistic Regression
-    logistic = LogisticRegression()
+
+    logistic = LogisticRegression(solver='lbfgs', max_iter=1000)
     logistic.fit(X_train, y_train)
     y_predict = logistic.predict(X_test)
     accuracy_LR = accuracy_score(y_test, y_predict)
-    print("Accuracy of LR", accuracy_LR)
+    print("Accuracy of Logistic Regression", accuracy_LR)
+    print(
+        "Classification Report of Logistic Regression\n",
+        classification_report(y_test, y_predict),
+    )
 
     # support vector machine
     support_vector = svm.SVC()
@@ -459,8 +482,13 @@ def main():
     y_predict = support_vector.predict(X_test)
     accuracy_SV = accuracy_score(y_test, y_predict)
     print("Accuracy of SV", accuracy_SV)
+    print(
+        "Classification Report of Support Vector Classifier\n",
+        classification_report(y_test, y_predict),
+    )
 
-    # NOTE: The accuracy of Logistic regression is slightly better than Randon forest, Support vector and LDA.
+    # NOTE: The accuracy of Logistic regression model is slightly better
+    # than Random forest, Support vector and LDA.
 
 
 if __name__ == "__main__":

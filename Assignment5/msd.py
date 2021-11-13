@@ -18,7 +18,6 @@ def con_con_diff(X, y, con_names, response, response_type):
     ]
     con_con_msd_df = pd.DataFrame(columns=cols)
 
-    type=con_con_msd_df.dtypes
     if response_type == "continuous":
         pop_mean = y.mean()
     else:
@@ -41,8 +40,8 @@ def con_con_diff(X, y, con_names, response, response_type):
                 )
                 b2.columns = [p1, p2, "bin_count", "bin_mean"]
                 pp = b2.bin_count / len(y)
-                b2["unweighted_msd"] = ((b2["bin_mean"] - pop_mean) ** 2)/10
-                b2["weighted_msd"] = ((b2['bin_mean']-pop_mean)**2)* pp
+                b2["unweighted_msd"] = ((b2["bin_mean"] - pop_mean) ** 2) / 10
+                b2["weighted_msd"] = ((b2["bin_mean"] - pop_mean) ** 2) * pp
                 con_con_msd_df = con_con_msd_df.append(
                     dict(
                         zip(
@@ -110,8 +109,10 @@ def cat_con_diff(X, y, con_names, cat_names, response, response_type):
                 b2 = b1.groupby(["x1", "B"]).agg({"y": ["count", "mean"]}).reset_index()
                 b2.columns = [p1, p2, "bin_count", "bin_mean"]
                 pp = b2.bin_count / len(y)
-                b2["unweighted_msd"] = ((b2["bin_mean"] - pop_mean) ** 2)/(len(b2.bin_count))
-                b2["weighted_msd"] = ((b2['bin_mean']-pop_mean)**2) * pp
+                b2["unweighted_msd"] = ((b2["bin_mean"] - pop_mean) ** 2) / (
+                    len(b2.bin_count)
+                )
+                b2["weighted_msd"] = ((b2["bin_mean"] - pop_mean) ** 2) * pp
                 cat_con_msd_df = cat_con_msd_df.append(
                     dict(
                         zip(
@@ -176,8 +177,10 @@ def cat_cat_diff(X, y, cat_names, response, response_type):
                 )
                 b2.columns = [p1, p2, "bin_count", "bin_mean"]
                 pp = b2.bin_count / len(y)
-                b2["unweighted_msd"] = ((b2["bin_mean"] - pop_mean) ** 2)/(len(b2.bin_count))
-                b2["weighted_msd"] = ((b2['bin_mean']-pop_mean)**2) * pp
+                b2["unweighted_msd"] = ((b2["bin_mean"] - pop_mean) ** 2) / (
+                    len(b2.bin_count)
+                )
+                b2["weighted_msd"] = ((b2["bin_mean"] - pop_mean) ** 2) * pp
                 cat_cat_msd_df = cat_cat_msd_df.append(
                     dict(
                         zip(
