@@ -20,7 +20,6 @@ from sklearn.metrics import accuracy_score, classification_report, confusion_mat
 from sklearn.model_selection import train_test_split
 from sklearn.pipeline import Pipeline
 from sklearn.preprocessing import Normalizer
-from sklearn.linear_model import LogisticRegression
 
 correlation_table = {}
 correlation_matrices = []
@@ -466,7 +465,7 @@ def main():
 
     # Logistic Regression
 
-    logistic = LogisticRegression(solver='lbfgs', max_iter=1000)
+    logistic = LogisticRegression(solver="lbfgs", max_iter=1000)
     logistic.fit(X_train, y_train)
     y_predict = logistic.predict(X_test)
     accuracy_LR = accuracy_score(y_test, y_predict)
