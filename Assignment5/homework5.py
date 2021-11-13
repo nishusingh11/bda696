@@ -424,8 +424,7 @@ def main():
         dataframes_brute_force, os.path.abspath("plot/brute_force")
     )
 
-    # Modelling
-
+    # ------------------------- Modelling-----------------------------
     X_train, X_test, y_train, y_test = train_test_split(
         X, y, test_size=0.15, random_state=1234
     )
