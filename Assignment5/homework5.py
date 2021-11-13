@@ -1,5 +1,7 @@
-import os
+# Reused the code of Assignment 2 for SQL, Assignment 3 for spark session builder,
+# Assignment 4 and 5 for plotting, correlation and MSD
 
+import os
 import correlation_score
 import link
 import msd
@@ -202,8 +204,6 @@ def main():
         os.makedirs("plot/hw_4_plot")
     path = os.path.abspath("plot/hw_4_plot")
 
-    conf = SparkConf().set("spark.jars", "../jars/mariadb-java-client-2.7.4.jar")
-    SparkContext(conf=conf)
     spark = (
         SparkSession.builder.master("local[*]")
         .config("spark.sql.debug.maxToStringFields", 128)

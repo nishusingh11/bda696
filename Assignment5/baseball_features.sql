@@ -1,33 +1,42 @@
-# Features Seelcted:
+# Features Selected:
 # Batting Statistics
-# 1. BA =  Hit/Atbat
+# 1. BA =  Hit/atbat
 # 2. A_HR = atBat/Home_RUN
 # 3. HBP = Hit by Pitch
 # 4. HRH = Home Run per Hit
 # 5. ISO = Isolated power (TB-B/atBAt)
-# 6. SLG = Sligging Average (TB/atBAt)
+# 6. SLG = Slugging Average (TB/atBAt)
 # 7. OBP = on base percentage (H+BB+HBP)/(atBAt+BB+HBP+Sac_Fly)
 # 8. TB = Total Bases [H + 2B + (2 × 3B) + (3 × HR)] or [1B + (2 × 2B) + (3 × 3B) + (4 × HR)]
 # 9. TOB = Times on base (H + BB + HBP)
-# Pitching Statistics
+# Pitching Statistics (Got idea of good pitching statistics from wiki page)
 # 10. IP = Inning Pitched (endingInning-startingInning)
 # 11. ERA = earned run average 9*(earned run allowed/IP)
 # 12. WHIP = walks plus hits per inning pitched
-
+# For calculating statistical feature Home_team_wins response:
+#->we can calculate feature ratio between  home and away
+#-> Calculate Feature difference between home and away
+#-> calculate difference percentage on the basis of home feature. [Feature_diff/Feature_home]*100
+# I tried for ratio and diff, By using ratio I am getting better result so for modelling I used ratio code.
+# In my sql code, I have calculated feature_ratio and feature_diff tables.
+#used ref https://fisher.wharton.upenn.edu/wp-content/uploads/2020/09/Thesis_Andrew-Cui.pdf and
+# towardsdatascience.com
 
 
 
 USE baseball;
 
-DROP TABLE IF EXISTS team_pitch_temp;
-CREATE TABLE IF NOT EXISTS team_pitch_temp
-SELECT tbc.*,pc.startingPitcher,
+DROP TEMPORARY TABLE IF EXISTS team_pitch_temp;
+CREATE TEMPORARY TABLE team_pitch_temp ENGINE=MEMORY AS
+SELECT tbc.*,
+pc.startingPitcher,
 SUM(pc.startingInning) AS startingInning ,
 SUM(pc.endingInning) AS endingInning
 FROM team_pitching_counts tbc
-JOIN pitcher_counts pc ON pc.game_id = tbc.game_id 
+JOIN pitcher_counts pc ON pc.game_id = tbc.game_id
 AND pc.team_id = tbc.team_id
 GROUP BY pc.team_id,pc.game_id;
+CREATE INDEX team_pitch_temp_idx ON team_pitch_temp (team_id, game_id);
 
 SELECT * FROM team_pitch_temp;
 
@@ -59,7 +68,7 @@ tpt.P_Strikeout,
 tpt.P_Walk,
 (tpt.P_startingInning) AS P_startingInning,
 (tpt.P_endingInning) AS P_endingInning
-FROM team_batting_counts tbc 
+FROM team_batting_counts tbc
 JOIN team_pitch_temp tpt ON tbc.game_id = tpt.game_id AND tbc.team_id = tpt.team_id
 JOIN team_results tr ON tr.team_id = tbc.team_id AND tr.game_id = tbc.game_id
 JOIN boxscore b ON tbc.game_id = b.game_id GROUP BY team_id, game_id;
@@ -67,8 +76,8 @@ JOIN boxscore b ON tbc.game_id = b.game_id GROUP BY team_id, game_id;
 SELECT * FROM feature_temp;
 
 
-DROP TABLE IF EXISTS rolling_100_days;
-CREATE TABLE IF NOT EXISTS rolling_100_days
+DROP TEMPORARY TABLE IF EXISTS rolling_100_days;
+CREATE TEMPORARY TABLE  rolling_100_days ENGINE=MEMORY AS
 SELECT
 ft1.team_id as team_id,
 ft1.game_id as game_id,
@@ -93,13 +102,13 @@ NULLIF(SUM(ft2.P_Strikeout),0) AS P_K,
 NULLIF(9*(AVG(ft2.away_runs)/(ft2.P_endingInning-ft2.P_startingInning)),0) AS ERA
 FROM feature_temp ft1
 JOIN team t ON ft1.team_id = t.team_id
-JOIN game g1 ON g1.game_id = ft1.game_id 
+JOIN game g1 ON g1.game_id = ft1.game_id
 JOIN feature_temp ft2 ON ft1.team_id = ft2.team_id
-JOIN game g2 ON g2.game_id = ft2.game_id AND g2.local_date < g1.local_date 
+JOIN game g2 ON g2.game_id = ft2.game_id AND g2.local_date < g1.local_date
 AND g2.local_date >= date_add(g1.local_date, INTERVAL - 100 day)
 GROUP BY ft1.team_id, ft1.game_id, g1.local_date
 ORDER BY ft1.team_id,g1.local_date;
-CREATE UNIQUE INDEX team_game ON rolling_100_days(team_id, game_id);
+CREATE UNIQUE INDEX rolling_100_days_idx ON rolling_100_days(team_id, game_id);
 
 
 SELECT * FROM rolling_100_days;
@@ -113,26 +122,24 @@ SELECT
     g.away_team_id,
     ROUND(((rdh.Hit / rdh.atBat) / (rda.Hit / rda.atBat)),3) AS BA_Ratio,
     ROUND(((rdh.atBat/rdh.Home_Run)/(rda.atBat/rda.Home_Run)),3) AS A_HR_Ratio,
-    ROUND((rdh.Hit_By_Pitch / nullif(rda.Hit_By_Pitch,0)),3) AS HBP_Ratio,
-    ROUND(((nullif(rdh.Home_Run,0) / rdh.Hit) / nullif((nullif(rda.Home_Run,0) / rda.Hit),0)),3) AS HRH_Ratio,
-    ROUND((((rdh.TB-rdh.B)/rdh.atBat)/nullif(((rda.TB-rda.B)/rda.atBat),0)),3) AS ISO_Ratio,
+    ROUND((rdh.Hit_By_Pitch / NULLIF(rda.Hit_By_Pitch,0)),3) AS HBP_Ratio,
+    ROUND(((NULLIF(rdh.Home_Run,0) / rdh.Hit) / NULLIF((NULLIF(rda.Home_Run,0) / rda.Hit),0)),3) AS HRH_Ratio,
+    ROUND((((rdh.TB-rdh.B)/rdh.atBat)/NULLIF(((rda.TB-rda.B)/rda.atBat),0)),3) AS ISO_Ratio,
     ROUND((((rdh.TB) / rdh.atBat) / ((rda.TB) / rda.atBat)),3) AS SLG_Ratio,
     ROUND((((rdh.Hit + rdh.BB + rdh.Hit_By_Pitch) / (rdh.atBat + rdh.BB + rdh.Hit_By_Pitch + rdh.Sac_Fly))
     / ((rda.Hit + rda.BB + rda.Hit_By_Pitch) / (rda.atBat + rda.BB + rda.Hit_By_Pitch + rda.Sac_Fly))),3) AS OBP_Ratio,
     ROUND((rdh.TB / rda.TB),3) AS TB_Ratio,
     ROUND((rdh.TOB / rda.TOB),3) AS TOB_Ratio,
-    ROUND((rdh.P_IP/rda.P_IP),3) AS IP_Ratio,ROUND((rdh.ERA / nullif(rda.ERA,0)),3) AS P_ERA_Ratio,
+    ROUND((rdh.P_IP/rda.P_IP),3) AS IP_Ratio,ROUND((rdh.ERA / NULLIF(rda.ERA,0)),3) AS P_ERA_Ratio,
     ROUND((((rdh.P_Home_Run + rdh.P_BB) / rdh.P_IP) / ((rda.P_Home_Run + rda.P_BB) / rda.P_IP)),3) AS P_WHIP_Ratio,  
     CASE WHEN b.away_runs < b.home_runs THEN 1
     WHEN b.away_runs > b.home_runs THEN 0
     ELSE 0 END AS home_team_wins
 FROM
     game g
-        JOIN
-    rolling_100_days rdh ON g.game_id = rdh.game_id
+        JOIN rolling_100_days rdh ON g.game_id = rdh.game_id
         AND g.home_team_id = rdh.team_id
-        JOIN
-    rolling_100_days rda ON g.game_id = rda.game_id
+        JOIN rolling_100_days rda ON g.game_id = rda.game_id
         AND g.away_team_id = rda.team_id
         JOIN boxscore b ON b.game_id = g.game_id;
        
@@ -148,27 +155,25 @@ SELECT
     g.away_team_id,
     ROUND(((rdh.Hit / rdh.atBat) - (rda.Hit / rda.atBat)),3) AS BA_diff,
     ROUND(((rdh.atBat/rdh.Home_Run)-(rda.atBat/rda.Home_Run)),3) AS A_HR_diff,
-    ROUND((rdh.Hit_By_Pitch - nullif(rda.Hit_By_Pitch,0)),3) AS HBP_diff,
-    ROUND(((nullif(rdh.Home_Run,0) / rdh.Hit) - nullif((nullif(rda.Home_Run,0) / rda.Hit),0)),3) AS HRH_diff,
-    ROUND((((rdh.TB-rdh.B)/rdh.atBat)-nullif(((rda.TB-rda.B)/rda.atBat),0)),3) AS ISO_diff,
+    ROUND((rdh.Hit_By_Pitch - NULLIF(rda.Hit_By_Pitch,0)),3) AS HBP_diff,
+    ROUND(((NULLIF(rdh.Home_Run,0) / rdh.Hit) - NULLIF((NULLIF(rda.Home_Run,0) / rda.Hit),0)),3) AS HRH_diff,
+    ROUND((((rdh.TB-rdh.B)/rdh.atBat)-NULLIF(((rda.TB-rda.B)/rda.atBat),0)),3) AS ISO_diff,
     ROUND((((rdh.TB) / rdh.atBat) - ((rda.TB) / rda.atBat)),3) AS SLG_diff,
     ROUND((((rdh.Hit + rdh.BB + rdh.Hit_By_Pitch) / (rdh.atBat + rdh.BB + rdh.Hit_By_Pitch + rdh.Sac_Fly))
     - ((rda.Hit + rda.BB + rda.Hit_By_Pitch) / (rda.atBat + rda.BB + rda.Hit_By_Pitch + rda.Sac_Fly))),3) AS OBP_diff,
     ROUND((rdh.TB - rda.TB),3) AS TB_diff,
     ROUND((rdh.TOB - rda.TOB),3) AS TOB_diff,
     ROUND((rdh.P_IP-rda.P_IP),3) AS IP_diff,
-    ROUND((rdh.ERA - nullif(rda.ERA,0)),3) AS P_ERA_diff,
+    ROUND((rdh.ERA - NULLIF(rda.ERA,0)),3) AS P_ERA_diff,
     ROUND((((rdh.P_Home_Run + rdh.P_BB) / rdh.P_IP) - ((rda.P_Home_Run + rda.P_BB) / rda.P_IP)),3) AS P_WHIP_diff, 
     CASE WHEN b.away_runs < b.home_runs THEN 1
     WHEN b.away_runs > b.home_runs THEN 0
     ELSE 0 END AS home_team_wins
 FROM
     game g
-        JOIN
-    rolling_100_days rdh ON g.game_id = rdh.game_id
+        JOIN rolling_100_days rdh ON g.game_id = rdh.game_id
         AND g.home_team_id = rdh.team_id
-        JOIN
-    rolling_100_days rda ON g.game_id = rda.game_id
+        JOIN rolling_100_days rda ON g.game_id = rda.game_id
         AND g.away_team_id = rda.team_id
         JOIN boxscore b ON b.game_id = g.game_id;
        
