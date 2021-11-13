@@ -485,8 +485,8 @@ def main():
         classification_report(y_test, y_predict),
     )
 
-    # NOTE: The accuracy of Logistic regression model is slightly better
-    # than Random forest, Support vector and LDA.
+    # NOTE: The accuracy of Support Vector Classifier model is slightly better
+    # than Random forest, Logistic Regression and LDA.
 
 
 if __name__ == "__main__":
