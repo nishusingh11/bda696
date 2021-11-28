@@ -2,6 +2,7 @@
 # Assignment 4 and 5 for plotting, correlation and MSD
 
 import os
+
 import correlation_score
 import link
 import msd
@@ -12,7 +13,7 @@ import table
 from plotly import express as px
 from plotly import figure_factory as ff
 from plotly import graph_objs as go
-from pyspark import SparkConf, SparkContext, StorageLevel
+from pyspark import StorageLevel
 from pyspark.sql import SparkSession
 from sklearn import svm
 from sklearn.discriminant_analysis import LinearDiscriminantAnalysis as LDA
