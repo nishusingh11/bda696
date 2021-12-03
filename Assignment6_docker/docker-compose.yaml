@@ -25,6 +25,8 @@ services:
       - ./result:/app/output
     depends_on:
       - bda696_mariadb
+#    links:
+#      - bda696_mariadb
 volumes:
   mariadb-data:
     driver: local
