@@ -1,5 +1,4 @@
-# Reused the code of Assignment 2 for SQL, Assignment 3 for spark session builder,
-# Assignment 4 and 5 for plotting, correlation and MSD
+
 
 import os
 
@@ -16,7 +15,8 @@ from plotly import express as px
 from plotly import figure_factory as ff
 from plotly import graph_objs as go
 from importance import variable_importance, plot_feature_imp
-
+import M
+import Models
 
 # from pyspark import StorageLevel
 # from pyspark.sql import SparkSession
@@ -86,8 +86,10 @@ def bool_response_con_predictor(dataset_df, response, column, Y):
     colors = ["slategray", "magenta"]
     fig = ff.create_distplot(hist_data, group_labels, bin_size=10, colors=colors)
     fig.update_layout(
-        title="Continuous Predictor by Boolean Response",
+        # title="Continuous Predictor by Boolean Response",
+        title=column
     )
+    fig.update_layout(autosize=False, width=700, height=700)
     # fig.show()
     file_name = f"plot/hw_4_plot/cr_con_{column}.html"
     file_name_cat_con = f"plot/hw_4_plot/cr_cat_con_{column}.html"
@@ -163,7 +165,7 @@ def linear_regression(y, pred, column):
 
     # Get statistics
     tval = round(linear_regression_model_fitted.tvalues[1], 6)
-    pval = "{:.6e}".format(linear_regression_model_fitted.pvalues[1])
+    pval = round(linear_regression_model_fitted.pvalues[1], 6)
 
     return tval, pval
 
@@ -198,17 +200,19 @@ def plot1(df, title):
         )
 
         fig.update_layout(title_text=f"<i><b>{title}</b></i>")
-        # fig.show() uncomment
+        fig.show()
         return fig
 
 
-def plot_pval_tval(p, t):
+def plot(p, t):
     p1, t1, p2, t2 = (
         list(p.values()),
         list(t.values()),
         list(p.keys()),
         list(t.keys()),
     )
+    p1.sort()
+    t1.sort()
     t1 = [abs(i) for i in t1]
     # print(p1)
     # print(t1)
@@ -218,12 +222,49 @@ def plot_pval_tval(p, t):
     p1, p2 = (list(i) for i in zip(*sorted(zip(p1, p2))))
     plot_t = plotly.subplots.make_subplots(rows=2, cols=1, vertical_spacing=0.35)
     plot_t.add_trace(go.Bar(name="tval", y=t1, x=t2), row=1, col=1)
+    plot_t.update_layout(title=go.layout.Title(text="t-score plot", font=dict(
+        family="Courier New, monospace",
+        size=22,
+        color="#0000FF"
+    )))
+    plot_t.update_layout(autosize=False, width=700, height=700)
     plot_t.update_xaxes(tickangle=45)
     plot_p = plotly.subplots.make_subplots(rows=2, cols=1, vertical_spacing=0.35)
     plot_p.add_trace(go.Bar(name="pval", y=p1, x=p2), row=1, col=1)
+    plot_p.update_layout(title=go.layout.Title(text="p-score plot", font=dict(
+        family="Courier New, monospace",
+        size=22,
+        color="#0000FF"
+    )))
+    plot_p.update_layout(autosize=False, width=700, height=700)
     plot_p.update_xaxes(tickangle=45)
     plot_t.show()
     plot_p.show()
+
+
+def plot2(rank, title):
+    rank_val, rank_key = (
+        list(rank.values()),
+        list(rank.keys()),
+    )
+    rank_val = [abs(i) for i in rank_val]
+    # print(p1)
+    # print(t1)
+    # print(p2)
+    # print(t2)
+    rank_val, rank_key = (list(i) for i in zip(*sorted(zip(rank_val, rank_key))))
+    # p1, p2 = (list(i) for i in zip(*sorted(zip(p1, p2))))
+    plot_rank = plotly.subplots.make_subplots(rows=2, cols=1, vertical_spacing=0.35)
+    plot_rank.add_trace(go.Bar(name="Weigthed Rank", y=rank_val, x=rank_key), row=1, col=1)
+    plot_rank.update_layout(autosize=False, width=700, height=700)
+    plot_rank.update_layout(title=go.layout.Title(text=title, font=dict(
+        family="Courier New, monospace",
+        size=22,
+        color="#0000FF"
+    )))
+    plot_rank.update_xaxes(tickangle=45)
+    print("rank")
+    plot_rank.show()
 
 
 def main():
@@ -233,34 +274,12 @@ def main():
         os.makedirs("plot/correlation_plot")
     if not os.path.exists("plot/hw_4_plot"):
         os.makedirs("plot/hw_4_plot")
+    if not os.path.exists("plot/mean_diff"):
+        os.makedirs("plot/mean_diff")
     path = os.path.abspath("plot/hw_4_plot")
-    '''
-    spark = (
-        SparkSession.builder.master("local[*]")
-        .config("spark.sql.debug.maxToStringFields", 128)
-        .getOrCreate()
-    )
+    if not os.path.exists("plot/tval_pval"):
+        os.makedirs("plot/tval_pval")
 
-    # Dataframe for final_baseball_features
-    dataframe = (
-        spark.read.format("jdbc")
-        .options(
-            url="jdbc:mysql://localhost:3306/baseball",
-            driver="org.mariadb.jdbc.Driver",
-            dbtable="feature_ratio",
-            user="root",
-            password="abc123",  # pragma: allowlist secret
-        )
-        .load()
-    )
-
-    dataframe.createOrReplaceTempView("feature_ratio")
-    dataframe.persist(StorageLevel.MEMORY_AND_DISK)
-    query = spark.sql(
-        """ SELECT * FROM feature_per
-        """
-    )
-    '''
     user = "root"
     password = "abc123"  # pragma: allowlist secret
     host = "localhost:3306"  # pragma: allowlist secret
@@ -273,12 +292,13 @@ def main():
     # df = dataframe.toPandas()
 
     df = df.drop(["home_team_id", "away_team_id", "game_id"], axis=1)
+
     for column in df:
         df[column].fillna(0, inplace=True)
     df = df.round(3)
     print(df.dtypes)
     df.dropna(axis=1)
-
+    df.to_csv("./data.cvs")
     response = "home_team_wins"
     X = df.iloc[:, :-1]
     print(X.describe())
@@ -339,7 +359,7 @@ def main():
                 xaxis_title=f"Variable:{column}",
                 yaxis_title=response,
             )
-            # fig.show() uncomment
+            # fig.show()
         elif response_type == "boolean" and predictor_type[index] == "continuous":
             t_val, p_val = logistic_regression(y, pred, column)
             t[column] = t_val
@@ -350,8 +370,26 @@ def main():
                 xaxis_title=f"Variable: {column}",
                 yaxis_title=response,
             )
-            # fig.show() uncomment
-    plot_pval_tval(p, t)
+            filename = f"plot/tval_pval/tval_pval_{column}.html"
+            fig.write_html(
+                file=filename,
+                include_plotlyjs="cdn",
+            )
+            # fig.show()
+    plot(p, t)
+    data3 = []
+    for column, value in t.items():
+        data3.append(
+            dict(
+                response="response",
+                predictor=column,
+                t_score=abs(value),
+                p_score=p[column],
+            )
+        )
+    df4 = pd.DataFrame(data3)
+    df4 = df4.sort_values(by=["t_score"], ascending=False)
+    print("t and p dataframe\n", df4)
 
     # Random Forest variable Importance ranking
     var_importance = variable_importance(X, y, response_type, predictor)
@@ -362,14 +400,56 @@ def main():
     plot_feature_imp(sorted_importance, predictor)
 
     # Difference with Mean
-    #msd.mean_diff_response(X, y, predictor, response, response_type)
+    # msd.mean_diff_response(X, y, predictor, response, response_type)
     # msd.plot_weighted(weighted_table,predictor,)
+    # rank=M.diff(X, predictor, y, response, predictor_type)
+    # rank = M.mean_diff_response(X, y, con_names, response, response_type)
+    rank, mean_diff_df = M.new_diff(X, predictor, response, y)
+    plot2(rank, "Weighted mean squared diff ")
+    # rank=M.diff(X, predictor, y, response, predictor_type)
 
+    data = []
+    for column, value in sorted_importance.items():
+        data.append(
+            dict(
+                response="response",
+                predictor=column,
+                Importance=sorted_importance[column],
+            )
+        )
+    df1 = pd.DataFrame(data)
+    # print(df)
+
+    html = df1.to_html(escape=True, render_links=True)
+    text_file = open("Assignment.html", "w")
+    text_file.write(html)
+    text_file.close()
+
+    sorted_rank = dict(
+        sorted(rank.items(), key=lambda x: x[1], reverse=True)
+    )
+    print(sorted_rank)
+    # data1 = []
+    # for column, value in sorted_rank.items():
+    #     data1.append(
+    #         dict(
+    #             response="response",
+    #             predictor=column,
+    #             MSD_Weighted_rank=sorted_rank[column],
+    #         )
+    #     )
+    # df2 = pd.DataFrame(data1)
+    # print("sorted weighted rank",df2)
+
+    # html = df2.to_html(escape=True, render_links=True)
+    # text_file = open("Assignment3.html", "w")
+    # text_file.write(html)
+    # text_file.close()
 
     # -----------correlation score, matrix and msd table for con-con----------------
 
-    con_con_matrix = df_con_predictor.corr(method="pearson")
-
+    con_con_matrix = round(df_con_predictor.corr(method="pearson"), 2)
+    # con_con_matrix = round(df.corr(method="pearson"),2)
     print("\ncon con score matrix\n", con_con_matrix)
     con_con_matrix = con_con_matrix.to_dict()
     con_con_matrix_df = pd.DataFrame(con_con_matrix)
@@ -395,82 +475,6 @@ def main():
         X, y, con_names, response, response_type
     )
     print("\ncon con msd table\n", con_con_msd_df)
-    # test_diff = msd.mean_diff_response(X, y, con_names, response, response_type)
-
-    # checking
-    # -----------correlation score, matrix and msd table for cat-con----------------
-    cat_con_matrix = {}
-    if len(con_names) and len(cat_names):
-        for i in con_names:
-            cat_con_matrix[i] = {}
-            for j in cat_names:
-                cat_con_matrix[i][j] = round(
-                    correlation_score.cat_cont_correlation_ratio(
-                        X[j].to_numpy(), X[i].to_numpy()
-                    ),
-                    5,
-                )
-
-    cat_con_matrix_d = pd.DataFrame(cat_con_matrix)
-
-    print("\ncat_con_matrix\n", cat_con_matrix)
-    correlation_matrices.append(cat_con_matrix)
-
-    cat_con_table = table.correlation_table(cat_con_matrix, response)
-    print("\ncat-con correlation table\n", cat_con_table)
-
-    # Heatmap plot for cat-con matrix
-    cat_con_plot = plot1(
-        cat_con_matrix_d, "Correlation between Categorical and Continuous predictor"
-    )
-    # cat_con_mat.show()
-
-    # saving cat-con matrix in html file
-    # if type(cat_con_matrix_d) == type(None):
-    # there is no cat predictors
-    location = f"plot/correlation_plot/cat_con_heatmap.html"
-    cat_con_plot.write_html(file=location, include_plotlyjs="cdn")
-    correlation_plot.append(location)
-
-    # cat con msd table
-    cat_con_msd_df = msd.cat_con_diff(
-        X, y, con_names, cat_names, response, response_type
-    )
-    print("result cat con msd\n", cat_con_msd_df)
-
-    # -----------correlation score, matrix and msd table for cat-cat----------------
-
-    cat_cat_matrix = {}
-    for i in cat_names:
-        cat_cat_matrix[i] = {}
-        for j in cat_names:
-            cat_cat_matrix[i][j] = round(
-                correlation_score.cat_correlation(df[i], df[j]), 5
-            )
-
-    # print(cat_cat_matrix)
-    correlation_matrices.append(cat_cat_matrix)
-
-    cat_cat_table = table.correlation_table(cat_cat_matrix, response)
-    print("\ncat-cat correlation table\n", cat_cat_table)
-
-    cat_cat_matrix_df = pd.DataFrame(cat_cat_matrix)
-
-    # Heatmap plot for cat-cat matrix
-
-    cat_cat_mat = plot1(
-        cat_cat_matrix_df, "Correlation between Categorical and Categorical predictor"
-    )
-
-    # saving cat-cat matrix in html file
-    # if type(cat_cat_matrix_df) == type(None):
-    location = f"plot/correlation_plot/cat_cat_heatmap.html"
-    cat_cat_mat.write_html(file=location, default_width="40%", include_plotlyjs="cdn")
-    correlation_plot.append(location)
-
-    # cat cat msd table
-    cat_cat_msd_df = msd.cat_cat_diff(X, y, cat_names, response, response_type)
-    print("\nresult cat cat msd\n", cat_cat_msd_df)
 
     # ------------------------- Printing All matrices-----------------------------
     for i in correlation_matrices:
@@ -479,76 +483,19 @@ def main():
     # Html pages for correlation table with linked plots and msd table with plots
     # correlation table stored in plot/hw_4_plot with name of ""cr.html
     # msd table stored in plot/ with name brute_force "brute_force.html"
-    dataframes = [cat_cat_table, cat_con_table, con_con_table]
+    dataframes = [con_con_table]
+    dataframes_mean_diff = [mean_diff_df]
+    dataframes_p_tvalue=[df4]
     link.generate_html_cr(dataframes, path)
-    dataframes_brute_force = [cat_cat_msd_df, cat_con_msd_df, con_con_msd_df]
+    dataframes_brute_force = [con_con_msd_df]
     link.generate_html_brute_force(
         dataframes_brute_force, os.path.abspath("plot/brute_force")
     )
 
-    # ------------------------- Modelling-----------------------------
-    X_train, X_test, y_train, y_test = train_test_split(
-        X, y, test_size=0.15, random_state=1234
-    )
+    link.generate_html_mean_diff(dataframes_mean_diff, os.path.abspath("plot/mean_diff"))
+    link.generate_html_t_pval(dataframes_p_tvalue, os.path.abspath("plot/tval_pval"))
 
-    pipe = Pipeline([("Normalize", Normalizer()), ("LDA", LDA(n_components=1))])
-    pipe.fit(X_train, y_train)
-    y_predict = pipe.predict(X_test)
-    confusion_mat = confusion_matrix(y_test, y_predict)
-    accuracy_LDA = accuracy_score(y_test, y_predict)
-    print("confusion matrix of LDA:", confusion_mat)
-    print("accuracy of LDA", accuracy_LDA)
-    print("Classification Report of LDA\n", classification_report(y_test, y_predict))
-
-    # Random Forest Classifier
-    random_classifier = Pipeline(
-        [
-            ("Normalize", Normalizer()),
-            (
-                "RFC",
-                RandomForestClassifier(
-                    n_estimators=100,
-                    max_depth=15,
-                    criterion="entropy",
-                    random_state=499,
-                ),
-            ),
-        ]
-    )
-    random_classifier.fit(X_train, y_train)
-    y_predict = random_classifier.predict(X_test)
-    accuracy_RFC = accuracy_score(y_test, y_predict)
-    print("Accuracy of RFC", accuracy_RFC)
-    print(
-        "Classification Report of Random Forest Classifier\n",
-        classification_report(y_test, y_predict),
-    )
-
-    # Logistic Regression
-
-    logistic = LogisticRegression(solver="lbfgs", max_iter=1000)
-    logistic.fit(X_train, y_train)
-    y_predict = logistic.predict(X_test)
-    accuracy_LR = accuracy_score(y_test, y_predict)
-    print("Accuracy of Logistic Regression", accuracy_LR)
-    print(
-        "Classification Report of Logistic Regression\n",
-        classification_report(y_test, y_predict),
-    )
-
-    # support vector machine
-    support_vector = svm.SVC()
-    support_vector.fit(X_train, y_train)
-    y_predict = support_vector.predict(X_test)
-    accuracy_SV = accuracy_score(y_test, y_predict)
-    print("Accuracy of SV", accuracy_SV)
-    print(
-        "Classification Report of Support Vector Classifier\n",
-        classification_report(y_test, y_predict),
-    )
-
-    # NOTE: The accuracy of Support Vector Classifier model is slightly better
-    # than Random forest, Logistic Regression and LDA.
+    Models.modelling(X, y)
 
 
 if __name__ == "__main__":

@@ -254,6 +254,7 @@ def plot_weighted(Weighted_Table, feature, column):
             y=[i for i in Weighted_Table["BinMean"]],
             name="bin response mean",
             line=dict(color="red"),
+            width=0.5,
         ),
         go.Scatter(
             x=[min(feature), max(feature)],

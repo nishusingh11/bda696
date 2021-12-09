@@ -1,6 +1,5 @@
 """
 Code: To create mean square difference table weighted in descending order.
-Missing MSD of response
 """
 
 import pandas as pd

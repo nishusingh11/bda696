@@ -131,7 +131,8 @@ SELECT
     ROUND((rdh.TB / rda.TB),3) AS TB_Ratio,
     ROUND((rdh.TOB / rda.TOB),3) AS TOB_Ratio,
     ROUND((rdh.P_IP/rda.P_IP),3) AS IP_Ratio,ROUND((rdh.ERA / NULLIF(rda.ERA,0)),3) AS P_ERA_Ratio,
-    ROUND((((rdh.P_Home_Run + rdh.P_BB) / rdh.P_IP) / ((rda.P_Home_Run + rda.P_BB) / rda.P_IP)),3) AS P_WHIP_Ratio,  
+    ROUND(((rdh.P_Avg_Home_Run)/rdh.P_IP)/NULLIF(((rda.P_Avg_Home_Run)/rda.P_IP),0),3) AS HR9_Ratio,
+    ROUND((((rdh.P_Home_Run + rdh.P_BB) / rdh.P_IP) / ((rda.P_Home_Run + rda.P_BB) / rda.P_IP)),3) AS P_WHIP_Ratio,
     CASE WHEN b.away_runs < b.home_runs THEN 1
     WHEN b.away_runs > b.home_runs THEN 0
     ELSE 0 END AS home_team_wins
