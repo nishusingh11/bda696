@@ -1,0 +1,33 @@
+version: "3.8"
+services:
+  bda696_mariadb:
+    image: lscr.io/linuxserver/mariadb
+    container_name: bda696_mariadb
+    environment:
+      - PUID=1000
+      - PGID=1000
+      - MYSQL_DATABASE:baseball
+      - MYSQL_ROOT_PASSWORD=abc123 # pragma: allowlist secret
+      - TZ=UTC
+      - MYSQL_USER=root
+      - MYSQL_PASSWORD=abc123 # pragma: allowlist secret
+    volumes:
+      - mariadb:/config
+    ports:
+      - "8083:3306"
+    restart: always
+
+  bda696_mysql_service:
+    container_name: bda696_mysql
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: mysql_service
+    volumes:
+      - ./plot:/app/plot
+
+    depends_on:
+      - bda696_mariadb
+volumes:
+  mariadb:
+    driver: local

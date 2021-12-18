@@ -1,5 +1,3 @@
-import numpy as np
-import pandas as pd
 import plotly as plt
 import plotly.graph_objects as go
 from sklearn.ensemble import RandomForestClassifier, RandomForestRegressor
@@ -20,15 +18,11 @@ def variable_importance(X, Y, response_type, predictors):
     return var_importance
 
 
-def plot_feature_imp(importance, predictor):
-    # feature_imp=np.array(importance)
-    # feature_name= np.array(predictor)
-    # df=pd.DataFrame(importance)
+def plot_feature_imp(importance):
+
     feature_name = list(importance.keys())
     feature_imp = list(importance.values())
 
-    # importance_df=pd.DataFrame(importance)
-    # print(importance_df)
     feature_imp, feature_name = (
         list(i) for i in zip(*sorted(zip(feature_imp, feature_name)))
     )
@@ -36,5 +30,16 @@ def plot_feature_imp(importance, predictor):
     plot_t.add_trace(
         go.Bar(name="importance", y=feature_imp, x=feature_name), row=1, col=1
     )
+    plot_t.update_layout(
+        title=go.layout.Title(
+            text="Random Forest feature Importance",
+            font=dict(family="Courier New, monospace", size=22, color="#0000FF"),
+        )
+    )
+    plot_t.update_layout(autosize=False, width=700, height=700)
     plot_t.update_xaxes(tickangle=25)
-    plot_t.show()
+    filename = f"plot/Variable_importance_plot.html"
+    plot_t.write_html(
+        file=filename,
+        include_plotlyjs="cdn",
+    )
