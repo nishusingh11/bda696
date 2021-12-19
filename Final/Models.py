@@ -1,3 +1,7 @@
+"""
+reference to plot roc:https://stackoverflow.com/questions/25009284/how-to-plot-roc-curve-in-python
+"""
+
 import matplotlib.pyplot as plt
 import pandas as pd
 import plotly.figure_factory as ff
@@ -218,7 +222,6 @@ def modelling1(X, y):
     pipe = Pipeline([("Normalize", Normalizer()), ("LDA", LDA(n_components=1))])
     pipe.fit(X_train, y_train)
     y_predict = pipe.predict(X_test)
-    y_prob = pipe.predict_proba(X_test)
     confusion_mat = confusion_matrix(y_test, y_predict)
     accuracy_LDA = accuracy_score(y_test, y_predict)
     Accuracy2.append(accuracy_LDA)
@@ -243,7 +246,6 @@ def modelling1(X, y):
     )
     random_classifier.fit(X_train, y_train)
     y_predict = random_classifier.predict(X_test)
-    y_prob = random_classifier.predict_proba(X_test)
     accuracy_RFC = accuracy_score(y_test, y_predict)
 
     Accuracy2.append(accuracy_RFC)
@@ -270,7 +272,6 @@ def modelling1(X, y):
     )
     DecisionTree_classifier.fit(X_train, y_train)
     y_predict = DecisionTree_classifier.predict(X_test)
-    y_prob = DecisionTree_classifier.predict_proba(X_test)
     accuracy_DTC = accuracy_score(y_test, y_predict)
 
     Accuracy2.append(accuracy_DTC)
@@ -298,7 +299,6 @@ def modelling1(X, y):
     )
     XGBoostTree_classifier.fit(X_train, y_train)
     y_predict = XGBoostTree_classifier.predict(X_test)
-    y_prob = XGBoostTree_classifier.predict_proba(X_test)
     accuracy_XGB = accuracy_score(y_test, y_predict)
 
     Accuracy2.append(accuracy_XGB)
@@ -313,7 +313,6 @@ def modelling1(X, y):
     logistic = LogisticRegression(solver="lbfgs", max_iter=1000)
     logistic.fit(X_train, y_train)
     y_predict = logistic.predict(X_test)
-    y_prob = logistic.predict_proba(X_test)
     accuracy_LR = accuracy_score(y_test, y_predict)
     Accuracy2.append(accuracy_LR)
     print("Accuracy of Logistic Regression", accuracy_LR)

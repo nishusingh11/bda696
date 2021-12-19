@@ -1,31 +1,4 @@
-# Features Seelcted:
-# Batting Statistics
-# 1. BA =  Hit/Atbat
-# 2. A_HR = atBat/Home_RUN
-# 3. HBP = Hit by Pitch
-# 4. HRH = Home Run per Hit
-# 5. ISO = Isolated power (TB-H/atBAt)
-# 6. SLG = Slugging Average (TB/atBAt)
-# 7. OBP = on base percentage (H+BB+HBP)/(atBAt+BB+HBP+Sac_Fly)
-# 8. TB = Total Bases [H + 2B + (2 × 3B) + (3 × HR)] or [1B + (2 × 2B) + (3 × 3B) + (4 × HR)]
-# 17. XBH = Extra bases hits XBH = 2B + 3B + HR
-# 9. TOB = Times on base (H + BB + HBP)
-# Pitching Statistics
-# 10. IP = Inning Pitched (endingInning-startingInning)
-# 11. ERA = earned run average 9*(earned run allowed/IP)
-# 12. WHIP = walks plus hits per inning pitched
-# 13. FIP=
-#14. P_BB/9= bases on balls per nine innins pitched, 9*(BB/IP)
-#15 P_K9 =
-#16 HR9
-# 18. DICE = 3.00+((13*HR)+(3*(BB+HBP))-2K)/IP
-# 19: KBB= strikeout to walk ratio: K/BB
-#GBF = 
- 
-
-
-
-
+# reference used: https://en.wikipedia.org/wiki/Baseball_statistics
 
 USE baseball;
 

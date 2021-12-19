@@ -451,8 +451,10 @@ def main():
 
     Models.modelling(X, y)
 
-    # ------------------------------Removing bad features ---------------------------------
-    df1 = df.drop(["BB9_per", "TB_per", "OPS_per", "FIP_per", "ISO_per", "BA_per"], axis=1)
+    # ------------------------------Removing some bad features ---------------------------
+    df1 = df.drop(
+        ["BB9_per", "TB_per", "OPS_per", "FIP_per", "ISO_per", "BA_per"], axis=1
+    )
     for column in df1:
         df1[column].fillna(0, inplace=True)
     df1 = df1.round(3)
