@@ -1,8 +1,9 @@
 import os
-import link
-import msd
-import Models
+
 import bruteForce
+import link
+import Models
+import msd
 import numpy
 import pandas as pd
 import plotly.subplots
@@ -13,7 +14,6 @@ from importance import plot_feature_imp, variable_importance
 from plotly import express as px
 from plotly import figure_factory as ff
 from plotly import graph_objs as go
-
 
 correlation_table = {}
 correlation_matrices = []
@@ -267,8 +267,10 @@ def main():
     path = os.path.abspath("plot/hw_4_plot")
     if not os.path.exists("plot/tval_pval"):
         os.makedirs("plot/tval_pval")
-    if not os.path.exists("plot/roc"):
+    if not os.path.exists("plot/roc_confusionMatrix"):
         os.makedirs("plot/roc")
+    if not os.path.exists("plot/confusion_matrix"):
+        os.makedirs("plot/confusion_matrix")
 
     # Loading baseball data using sqlalchemy
 
@@ -288,7 +290,6 @@ def main():
     df = df.round(3)
     print(df.dtypes)
     df.dropna(axis=1)
-    df.to_csv("./data.cvs")
     response = "home_team_wins"
     X = df.iloc[:, :-1]
     print(X.describe())
@@ -434,7 +435,7 @@ def main():
     )
     print("\ncon con msd table\n", con_con_msd_df)
 
-    # -----------Generating html page-------------------
+    # -----------------------------Generating html page-------------------
 
     dataframes = [con_con_table]
     dataframes_mean_diff = [mean_diff_df]
@@ -445,11 +446,19 @@ def main():
         dataframes_brute_force, os.path.abspath("plot/brute_force")
     )
 
-    link.generate_html_mean_diff(
-        dataframes_mean_diff, "plot/mean_diff")
+    link.generate_html_mean_diff(dataframes_mean_diff, "plot/mean_diff")
     link.generate_html_t_pval(dataframes_p_tvalue, os.path.abspath("plot/tval_pval"))
 
     Models.modelling(X, y)
+
+    # ------------------------------Removing bad features ---------------------------------
+    df1 = df.drop(["BB9_per", "TB_per", "OPS_per", "FIP_per", "ISO_per", "BA_per"], axis=1)
+    for column in df1:
+        df1[column].fillna(0, inplace=True)
+    df1 = df1.round(3)
+    df1.dropna(axis=1)
+    X1 = df1.iloc[:, :-1]
+    Models.modelling1(X1, y)
 
 
 if __name__ == "__main__":

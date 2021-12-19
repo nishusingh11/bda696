@@ -15,7 +15,7 @@ services:
       - mariadb:/config
     ports:
       - "8083:3306"
-    restart: always
+    restart: unless-stopped
 
   bda696_mysql_service:
     container_name: bda696_mysql
@@ -25,6 +25,7 @@ services:
     image: mysql_service
     volumes:
       - ./plot:/app/plot
+      - ./res:/app/res
 
     depends_on:
       - bda696_mariadb

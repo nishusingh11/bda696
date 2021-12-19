@@ -331,7 +331,7 @@ def __get_anchor_str(current_table_id, table_label):
 
 
 def __generate_table_cr(dataframe, table_label, table_id):
-    anchor_str = __get_anchor_str(table_id, table_label)
+    # anchor_str = __get_anchor_str(table_id, table_label)
     table_str = (
         "Correlation score linked with distplot"
         + """
@@ -370,7 +370,7 @@ def __generate_table_cr(dataframe, table_label, table_id):
 
 
 def __generate_table_brute_force(dataframe, table_label, table_id):
-    anchor_str = __get_anchor_str(table_id, table_label)
+    # anchor_str = __get_anchor_str(table_id, table_label)
     table_str = (
         "<b>Brute force for variable combination"
         + """
@@ -412,7 +412,7 @@ def __generate_table_brute_force(dataframe, table_label, table_id):
 
 
 def __generate_table_mean_diff(dataframe, table_label, table_id):
-    anchor_str = __get_anchor_str(table_id, table_label)
+    # anchor_str = __get_anchor_str(table_id, table_label)
     table_str = (
         "Difference with mean of response table"
         + """
@@ -454,7 +454,7 @@ def __generate_table_mean_diff(dataframe, table_label, table_id):
 
 
 def __generate_table_t_pval(dataframe, table_label, table_id):
-    anchor_str = __get_anchor_str(table_id, table_label)
+    # anchor_str = __get_anchor_str(table_id, table_label)
     table_str = (
         "T-score &  P-score plots"
         + """
