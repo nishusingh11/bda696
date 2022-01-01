@@ -17,6 +17,7 @@ def con_con_diff(X, y, con_names, response, response_type):
         "weighted_msd",
     ]
     con_con_msd_df = pd.DataFrame(columns=cols)
+
     if response_type == "continuous":
         pop_mean = y.mean()
     else:
@@ -30,8 +31,8 @@ def con_con_diff(X, y, con_names, response, response_type):
                         "x1": X[p1],
                         "x2": X[p2],
                         "y": y,
-                        "B1": pd.cut(X[p1].rank(method="first"), 10),
-                        "B2": pd.cut(X[p2].rank(method="first"), 10),
+                        "B1": pd.cut(X[p1], 10),
+                        "B2": pd.cut(X[p2], 10),
                     }
                 )
                 b2 = (
