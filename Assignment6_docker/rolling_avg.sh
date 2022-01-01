@@ -13,7 +13,7 @@ echo "checking and loading baseball database"
 if ! mysql -h bda696_mariadb -u root -pabc123 -e 'USE baseball'; then
 
   echo "baseball database does not exists"
-  mysql -h bda696_mariadb -u root -pabc123 -e create baseball
+  mysql -h bda696_mariadb -u root -pabc123 -e "create database baseball"
   echo "loading database..."
   mysql -u root -pabc123 -h bda696_mariadb --database=baseball < /app/sql/baseball.sql
 

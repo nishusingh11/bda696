@@ -1,11 +1,9 @@
 """
 Code: To create mean square difference table weighted in descending order.
-Missing MSD of response
 """
 
 import pandas as pd
 from plotly import graph_objs as go
-from plotly.subplots import make_subplots
 
 
 def con_con_diff(X, y, con_names, response, response_type):
