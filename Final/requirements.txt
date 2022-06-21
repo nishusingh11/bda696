@@ -66,7 +66,7 @@ patsy==0.5.2
     # via statsmodels
 pep517==0.11.0
     # via pip-tools
-pillow==8.4.0
+pillow==9.0.1
     # via matplotlib
 pip-tools==6.2.0
     # via -r requirements.in
